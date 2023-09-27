@@ -4,7 +4,7 @@ import re
 
 from typing import TYPE_CHECKING
 
-from cleo.ui.question import Question
+from cleo.ui.components.question import Question
 
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ class ConfirmationQuestion(Question):
     ) -> None:
         super().__init__(question, default)
 
-        self._true_answer_regex = true_answer_regex
+        self._true_answer_regex = re.compile(true_answer_regex)
         self._normalizer = self._default_normalizer
 
     def _write_prompt(self, io: IO) -> None:
@@ -39,7 +39,7 @@ class ConfirmationQuestion(Question):
         if isinstance(answer, bool):
             return answer
 
-        answer_is_true = re.match(self._true_answer_regex, answer) is not None
+        answer_is_true = self._true_answer_regex.match(answer) is not None
         if self.default is False:
             return bool(answer and answer_is_true)
 

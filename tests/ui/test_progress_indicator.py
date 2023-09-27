@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from cleo.ui.progress_indicator import ProgressIndicator
+from cleo.ui.components.progress_indicator import ProgressIndicator
 
 
 if TYPE_CHECKING:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cleo.ui.exception_trace.inspector import Inspector
+from cleo.ui.components.exception_trace.inspector import Inspector
 from tests.ui.exception_trace.helpers import nested_exception
 from tests.ui.exception_trace.helpers import recursive_exception
 from tests.ui.exception_trace.helpers import simple_exception

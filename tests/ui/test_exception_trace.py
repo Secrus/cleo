@@ -8,7 +8,10 @@ import pytest
 
 from cleo.io.buffered_io import BufferedIO
 from cleo.io.outputs.output import Verbosity
-from cleo.ui.exception_trace.component import ExceptionTrace
+<<<<<<< HEAD
+=======
+from cleo.ui.components.exception_trace import ExceptionTrace
+>>>>>>> be79a36 (WIP)
 from tests.fixtures.exceptions import nested1
 from tests.fixtures.exceptions import nested2
 from tests.fixtures.exceptions import recursion
@@ -293,15 +296,21 @@ def test_render_falls_back_on_ascii_symbols() -> None:
 
 
 def test_empty_source_file_do_not_break_highlighter() -> None:
-    from cleo.ui.exception_trace.component import Highlighter
+<<<<<<< HEAD
+=======
+    from cleo.ui.components.exception_trace import Highlighter
+>>>>>>> be79a36 (WIP)
 
     highlighter = Highlighter()
     highlighter.highlighted_lines("")
 
 
 def test_docstrings_are_correctly_rendered() -> None:
-    from cleo.formatters.formatter import Formatter
-    from cleo.ui.exception_trace.component import Highlighter
+    pass
+<<<<<<< HEAD
+=======
+    from cleo.ui.components.exception_trace import Highlighter
+>>>>>>> be79a36 (WIP)
 
     source = '''
 def test():

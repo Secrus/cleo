@@ -4,7 +4,8 @@ import inspect
 
 from pathlib import Path
 
-from cleo.ui.exception_trace.frame import Frame
+from cleo.ui.components.exception_trace.frame import Frame
+
 from tests.ui.exception_trace.helpers import nested_exception
 from tests.ui.exception_trace.helpers import simple_exception
 

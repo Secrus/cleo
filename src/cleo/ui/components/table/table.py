@@ -14,10 +14,10 @@ from typing import cast
 
 from cleo.formatters.formatter import Formatter
 from cleo.io.outputs.output import Output
-from cleo.ui.table_cell import TableCell
-from cleo.ui.table_cell_style import TableCellStyle
-from cleo.ui.table_separator import TableSeparator
-from cleo.ui.table_style import TableStyle
+from cleo.ui.components.table.table_cell import TableCell
+from cleo.ui.components.table.table_cell_style import TableCellStyle
+from cleo.ui.components.table.table_separator import TableSeparator
+from cleo.ui.components.table.table_style import TableStyle
 
 
 if TYPE_CHECKING:

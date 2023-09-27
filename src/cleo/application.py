@@ -482,7 +482,7 @@ class Application:
         return IO(input, output, error_output)
 
     def render_error(self, error: Exception, io: IO) -> None:
-        from cleo.ui.exception_trace.component import ExceptionTrace
+        from cleo.ui.components.exception_trace import ExceptionTrace
 
         trace = ExceptionTrace(error)
         simple = not io.is_verbose() or isinstance(error, CleoUserError)
@@ -604,7 +604,7 @@ class Application:
         return " ".join(parts[:limit])
 
     def _get_default_ui(self) -> UI:
-        from cleo.ui.progress_bar import ProgressBar
+        from cleo.ui.components.progress_bar import ProgressBar
 
         io = self.create_io()
         return UI([ProgressBar(io)])

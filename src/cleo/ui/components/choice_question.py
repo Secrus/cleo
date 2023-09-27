@@ -7,7 +7,7 @@ from typing import Any
 from typing import cast
 
 from cleo.exceptions import CleoValueError
-from cleo.ui.question import Question
+from cleo.ui.components.question import Question
 
 
 if TYPE_CHECKING:

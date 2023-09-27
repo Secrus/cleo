@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cleo.ui.question import Question
+from cleo.ui.components.question import Question
 
 
 if TYPE_CHECKING:

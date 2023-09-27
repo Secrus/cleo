@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cleo.ui.table import Table
-from cleo.ui.table_cell import TableCell
-from cleo.ui.table_separator import TableSeparator
-from cleo.ui.table_style import TableStyle
+from cleo.ui.components.table import Table
+from cleo.ui.components.table.table_cell import TableCell
+from cleo.ui.components.table.table_separator import TableSeparator
+from cleo.ui.components.table.table_style import TableStyle
 
 
 if TYPE_CHECKING:
     from cleo.io.buffered_io import BufferedIO
-    from cleo.ui.table import Rows
+    from cleo.ui.components.table import Rows
 
 books = [
     ["99921-58-10-7", "Divine Comedy", "Dante Alighieri"],

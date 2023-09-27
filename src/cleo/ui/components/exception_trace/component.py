@@ -15,13 +15,13 @@ from typing import TYPE_CHECKING
 from typing import ClassVar
 
 from cleo.formatters.formatter import Formatter
-from cleo.ui.exception_trace.frame_collection import FrameCollection
+from cleo.ui.components.exception_trace.frame_collection import FrameCollection
 
 
 if TYPE_CHECKING:
     from cleo.io.io import IO
     from cleo.io.outputs.output import Output
-    from cleo.ui.exception_trace.frame import Frame
+    from cleo.ui.components.exception_trace.frame import Frame
 
 
 class Highlighter:
@@ -247,7 +247,7 @@ class ExceptionTrace:
             self._render_exception(io, self._exception)
 
     def _render_exception(self, io: IO | Output, exception: BaseException) -> None:
-        from cleo.ui.exception_trace.inspector import Inspector
+        from cleo.ui.components.exception_trace.inspector import Inspector
 
         inspector = Inspector(exception)
         if not inspector.frames:

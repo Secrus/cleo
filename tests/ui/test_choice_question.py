@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cleo.exceptions import CleoValueError
-from cleo.ui.choice_question import ChoiceQuestion
+from cleo.ui.components.choice_question import ChoiceQuestion
 
 
 if TYPE_CHECKING:

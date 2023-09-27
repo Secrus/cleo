@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import inspect
 
-from cleo.ui.exception_trace.frame import Frame
-from cleo.ui.exception_trace.frame_collection import FrameCollection
+from cleo.ui.components.exception_trace.frame import Frame
+from cleo.ui.components.exception_trace.frame_collection import FrameCollection
 
 
 class Inspector:

@@ -11,6 +11,7 @@ from typing import Callable
 
 from cleo.formatters.style import Style
 from cleo.io.outputs.stream_output import StreamOutput
+from cleo.ui.components.base_component import BaseComponent
 
 
 if TYPE_CHECKING:
@@ -20,12 +21,13 @@ Validator = Callable[[str], Any]
 Normalizer = Callable[[str], Any]
 
 
-class Question:
+class Question(BaseComponent):
     """
     A question that will be asked in a Console.
     """
 
-    def __init__(self, question: str, default: Any = None) -> None:
+    def __init__(self, io: IO, question: str, default: Any = None) -> None:
+        super().__init__(io)
         self._question = question
         self._default = default
 
@@ -35,7 +37,6 @@ class Question:
         self._autocomplete_values: list[str] = []
         self._validator: Validator = lambda s: s
         self._normalizer: Normalizer = lambda s: s
-        self._error_message = 'Value "{}" is invalid'
 
     @property
     def question(self) -> str:
@@ -45,16 +46,27 @@ class Question:
     def default(self) -> Any:
         return self._default
 
+    def is_hidden(self) -> bool:
+        return self._hidden
+
     @property
     def autocomplete_values(self) -> list[str]:
         return self._autocomplete_values
+
+    @autocomplete_values.setter
+    def autocomplete_values(self, autocomplete_values: list[str]) -> None:
+        if self.is_hidden():
+            raise RuntimeError("A hidden question cannot use the autocompleter.")
+
+        self._autocomplete_values = autocomplete_values
 
     @property
     def max_attempts(self) -> int | None:
         return self._attempts
 
-    def is_hidden(self) -> bool:
-        return self._hidden
+    @max_attempts.setter
+    def max_attempts(self, max_attempts: int | None) -> None:
+        self._attempts = max_attempts
 
     def hide(self, hidden: bool = True) -> None:
         if hidden is True and self._autocomplete_values:
@@ -62,65 +74,53 @@ class Question:
 
         self._hidden = hidden
 
-    def set_autocomplete_values(self, autocomplete_values: list[str]) -> None:
-        if self.is_hidden():
-            raise RuntimeError("A hidden question cannot use the autocompleter.")
-
-        self._autocomplete_values = autocomplete_values
-
-    def set_max_attempts(self, attempts: int | None) -> None:
-        self._attempts = attempts
-
     def set_validator(self, validator: Validator) -> None:
         self._validator = validator
 
-    def ask(self, io: IO) -> Any:
+    def ask(self) -> Any:
         """
         Asks the question to the user.
         """
-        if not io.is_interactive():
+        if not self.io.is_interactive():
             return self.default
-        return self._validate_attempts(lambda: self._do_ask(io), io)
+        return self._validate_attempts(lambda: self._do_ask())
 
-    def _do_ask(self, io: IO) -> Any:
-        """
-        Asks the question to the user.
-        """
-        self._write_prompt(io)
+    def _do_ask(self) -> Any:
+        self._write_prompt()
 
         if not (self._autocomplete_values and self._has_stty_available()):
             ret: str | None = None
 
             if self.is_hidden():
                 try:
-                    ret = self._get_hidden_response(io)
+                    ret = self._get_hidden_response()
                 except RuntimeError:
                     if not self._hidden_fallback:
                         raise
 
             if not ret:
-                ret = self._read_from_input(io)
+                ret = self._read_from_input()
         else:
-            ret = self._autocomplete(io)
+            ret = self._autocomplete()
 
         if len(ret) <= 0:
             ret = self._default
 
         return self._normalizer(ret)  # type: ignore[arg-type]
 
-    def _write_prompt(self, io: IO) -> None:
+    def _write_prompt(self) -> None:
         """
         Outputs the question prompt.
         """
-        io.write_error(f"<question>{self._question}</question> ")
+        self.io.write_error(f"<question>{self._question}</question> ")
 
-    def _write_error(self, io: IO, error: Exception) -> None:
+    def _write_error(self, error: Exception) -> None:
         """
         Outputs an error message.
         """
-        io.write_error_line(f"<error>{error!s}</error>")
+        self.io.write_error_line(f"<error>{error!s}</error>")
 
-    def _autocomplete(self, io: IO) -> str:
+    def _autocomplete(self) -> str:
         """
         Autocomplete a question.
         """
@@ -135,7 +135,7 @@ class Question:
 
         # Add highlighted text style
         style = Style(options=["reverse"])
-        io.error_output.formatter.set_style("hl", style)
+        self.io.error_output.formatter.set_style("hl", style)
 
         stty_mode = subprocess.check_output(["stty", "-g"]).decode().rstrip("\n")
 
@@ -145,14 +145,14 @@ class Question:
         try:
             # Read a keypress
             while True:
-                c = io.read(1)
+                c = self.io.read(1)
 
                 # Backspace character
                 if c == "\177":
                     if num_matches == 0 and i != 0:
                         i -= 1
                         # Move cursor backwards
-                        io.write_error("\033[1D")
+                        self.io.write_error("\033[1D")
 
                     if i == 0:
                         ofs = -1
@@ -165,7 +165,7 @@ class Question:
                     ret = ret[:i]
                 # Did we read an escape sequence
                 elif c == "\033":
-                    c += io.read(2)
+                    c += self.io.read(2)
 
                     # A = Up Arrow. B = Down Arrow
                     if c[2] == "A" or c[2] == "B":
@@ -182,18 +182,18 @@ class Question:
                         if num_matches > 0 and ofs != -1:
                             ret = matches[ofs]
                             # Echo out remaining chars for current match
-                            io.write_error(ret[i:])
+                            self.io.write_error(ret[i:])
                             i = len(ret)
 
                         if c == "\n":
-                            io.write_error(c)
+                            self.io.write_error(c)
                             break
 
                         num_matches = 0
 
                     continue
                 else:
-                    io.write_error(c)
+                    self.io.write_error(c)
                     ret += c
                     i += 1
 
@@ -208,30 +208,30 @@ class Question:
                             matches[num_matches - 1] = value
 
                 # Erase characters from cursor to end of line
-                io.write_error("\033[K")
+                self.io.write_error("\033[K")
 
                 if num_matches > 0 and ofs != -1:
                     # Save cursor position
-                    io.write_error("\0337")
+                    self.io.write_error("\0337")
                     # Write highlighted text
-                    io.write_error("<hl>" + matches[ofs][i:] + "</hl>")
+                    self.io.write_error("<hl>" + matches[ofs][i:] + "</hl>")
                     # Restore cursor position
-                    io.write_error("\0338")
+                    self.io.write_error("\0338")
         finally:
             subprocess.call(["stty", f"{stty_mode}"])
 
         return ret
 
-    def _get_hidden_response(self, io: IO) -> str:
+    def _get_hidden_response(self) -> str:
         """
         Gets a hidden response from user.
         """
         stream = None
-        if isinstance(io.error_output, StreamOutput):
-            stream = io.error_output.stream
+        if isinstance(self.io.error_output, StreamOutput):
+            stream = self.io.error_output.stream
         return getpass.getpass("", stream=stream)
 
-    def _validate_attempts(self, interviewer: Callable[[], Any], io: IO) -> Any:
+    def _validate_attempts(self, interviewer: Callable[[], Any]) -> Any:
         """
         Validates an attempt.
         """
@@ -240,7 +240,7 @@ class Question:
 
         while attempts is None or attempts:
             if error is not None:
-                self._write_error(io, error)
+                self._write_error(error)
 
             try:
                 return self._validator(interviewer())
@@ -253,18 +253,18 @@ class Question:
         assert error
         raise error
 
-    def _read_from_input(self, io: IO) -> str:
+    def _read_from_input(self) -> str:
         """
         Read user input.
         """
-        ret = io.read_line(4096)
 
-        if not ret:
+        if not (ret := self.io.read_line(4096)):
             raise RuntimeError("Aborted")
 
         return ret.strip()
 
-    def _has_stty_available(self) -> bool:
+    @staticmethod
+    def _has_stty_available() -> bool:
         with Path(os.devnull).open("w", encoding="utf-8") as devnull:
             try:
                 exit_code = subprocess.call(["stty"], stdout=devnull, stderr=devnull)

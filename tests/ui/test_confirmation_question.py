@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cleo.ui.confirmation_question import ConfirmationQuestion
+from cleo.ui.components.confirmation_question import ConfirmationQuestion
 
 
 if TYPE_CHECKING:

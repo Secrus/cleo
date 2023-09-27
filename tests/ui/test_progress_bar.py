@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cleo.io.outputs.output import Verbosity
-from cleo.ui.progress_bar import ProgressBar
+from cleo.ui.components.progress_bar import ProgressBar
 
 
 if TYPE_CHECKING:

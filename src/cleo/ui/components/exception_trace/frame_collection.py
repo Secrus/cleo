@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from cleo.ui.exception_trace.frame import Frame
+from cleo.ui.components.exception_trace.frame import Frame
 
 
 class FrameCollection(List[Frame]):
