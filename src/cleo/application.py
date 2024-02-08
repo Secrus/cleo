@@ -482,7 +482,7 @@ class Application:
         return IO(input, output, error_output)
 
     def render_error(self, error: Exception, io: IO) -> None:
-        from cleo.ui.components.exception_trace import ExceptionTrace
+        from cleo.ui.components.exception_trace.component import ExceptionTrace
 
         trace = ExceptionTrace(error)
         simple = not io.is_verbose() or isinstance(error, CleoUserError)
