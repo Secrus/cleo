@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC
 import os
 import sys
 
@@ -14,7 +15,7 @@ from cleo.parser.errors import BadOptionError
 from cleo.parser.errors import OptionConflictError
 from cleo.parser.errors import OptionError
 from cleo.parser.errors import OptionValueError
-from cleo.parser.formatters import IndentedHelpFormatter
+from cleo.parser.formatters import IndentedHelpFormatter, TitledHelpFormatter
 
 if TYPE_CHECKING:
     from cleo.parser.formatters import HelpFormatter
@@ -71,8 +72,8 @@ def check_choice(option: Option, opt: Any, value: str) -> str:
 # so we need an explicit "not supplied" value.
 NO_DEFAULT: tuple[str, ...] = ("NO", "DEFAULT")
 
-SUPPRESS_HELP: str = "SUPPRESSHELP"
-SUPPRESS_USAGE: str = "SUPPRESSUSAGE"
+SUPPRESS_HELP: str = "SUPPRESS"+"HELP"
+SUPPRESS_USAGE: str = "SUPPRESS"+"USAGE"
 
 
 class Option:
@@ -200,6 +201,7 @@ class Option:
     callback_kwargs: dict[str, Any] | None
     help: str | None
     metavar: str | None
+    choices: Iterable[str]
 
     def __init__(self, *opts: str | None, **attrs):
         # Set _short_opts, _long_opts attrs from 'opts' tuple.
@@ -210,7 +212,20 @@ class Option:
         self._set_opt_strings(opts)
 
         # Set all other attrs (action, type, etc.) from 'attrs' dict
-        self._set_attrs(attrs)
+        for attr in self.ATTRS:
+            if attr in attrs:
+                setattr(self, attr, attrs[attr])
+                del attrs[attr]
+            else:
+                if attr == "default":
+                    setattr(self, attr, NO_DEFAULT)
+                else:
+                    setattr(self, attr, None)
+        if attrs:
+            attrs = sorted(attrs.keys())
+            raise OptionError(
+                f"invalid keyword arguments: {', '.join(attrs)}", self
+            )
 
         # Check all the attributes we just set.  There are lots of
         # complicated interdependencies, but luckily they can be farmed
@@ -253,24 +268,6 @@ class Option:
                         self,
                     )
                 self._long_opts.append(opt)
-
-    def _set_attrs(self, attrs: dict[str, Any]) -> None:
-        for attr in self.ATTRS:
-            if attr in attrs:
-                setattr(self, attr, attrs[attr])
-                del attrs[attr]
-            else:
-                if attr == "default":
-                    setattr(self, attr, NO_DEFAULT)
-                else:
-                    setattr(self, attr, None)
-        if attrs:
-            attrs = sorted(attrs.keys())
-            raise OptionError(
-                "invalid keyword arguments: {}".format(", ".join(attrs)), self
-            )
-
-    # -- Constructor validation methods --------------------------------
 
     def _check_action(self) -> None:
         if self.action is None:
@@ -531,7 +528,7 @@ class Values:
         return getattr(self, attr)
 
 
-class OptionContainer:
+class OptionContainer(ABC):
     """
     Abstract base class.
 
@@ -856,7 +853,7 @@ class OptionParser(OptionContainer):
         self.allow_interspersed_args: bool = True
         self.process_default_values: bool = True
         if formatter is None:
-            formatter = IndentedHelpFormatter()
+            formatter = TitledHelpFormatter()
         self.formatter = formatter
         self.formatter.set_parser(self)
         self.epilog: str | None = epilog
@@ -1019,7 +1016,7 @@ class OptionParser(OptionContainer):
     #     ...
 
     def parse_args(
-        self, args: list[str] | None = None, values: Values | None = None
+        self, args: Iterable[str] | None = None, values: Values | None = None
     ) -> tuple[Values, list[str]]:
         """
         parse_args(args : [string] = sys.argv[1:],
@@ -1034,9 +1031,10 @@ class OptionParser(OptionContainer):
         your option values) and 'args' is the list of arguments left
         over after parsing options.
         """
-        rargs = self._get_args(args)
-        if values is None:
-            values = self.get_default_values()
+        if args:
+            args = args[:]
+        rargs = args or sys.argv[1:]
+        values = values or self.get_default_values()
 
         # Store the halves of the argument list as attributes for the
         # convenience of callbacks:
@@ -1087,7 +1085,7 @@ class OptionParser(OptionContainer):
             # We handle bare "--" explicitly, and bare "-" is handled by the
             # standard arg handler since the short arg case ensures that the
             # len of the opt string is greater than 1.
-            if arg == "--":
+            if arg == "--": # REMAINDER
                 del rargs[0]
                 return
             if arg[0:2] == "--":
@@ -1105,7 +1103,7 @@ class OptionParser(OptionContainer):
 
         # Say this is the original argument list:
         # [arg0, arg1, ..., arg(i-1), arg(i), arg(i+1), ..., arg(N-1)]
-        #                            ^
+        #                             ^
         # (we are about to process arg(i)).
         #
         # Then rargs is [arg(i), ..., arg(N-1)] and largs is a *subset* of
@@ -1187,8 +1185,8 @@ class OptionParser(OptionContainer):
 
                 nargs = option.nargs
                 if len(rargs) < nargs:
-                    message = f"{opt!s} option requires {nargs:d} argument"
-                    message = message if nargs == 1 else f"{message}s"
+                    msg = f"{opt!s} option requires {nargs:d} argument"
+                    message = msg if nargs == 1 else f"{msg}s"
                     self.error(message)
                 elif nargs == 1:
                     value = rargs.pop(0)

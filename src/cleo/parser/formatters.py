@@ -133,6 +133,7 @@ class HelpFormatter:
         return ""
 
     def expand_default(self, option: Option) -> str:
+        from cleo.parser.optparser import NO_DEFAULT
         if self.parser is None or not self.default_tag:
             return option.help
 
