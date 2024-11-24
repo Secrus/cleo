@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import inspect
 
+from functools import cached_property
+
 from cleo.ui.exception_trace.frame import Frame
 from cleo.ui.exception_trace.frame_collection import FrameCollection
 
@@ -26,21 +28,18 @@ class Inspector:
     def exception_message(self) -> str:
         return str(self._exception)
 
-    @property
+    @cached_property
     def frames(self) -> FrameCollection:
-        if self._frames is not None:
-            return self._frames
-
-        self._frames = FrameCollection()
+        frames = FrameCollection()
 
         tb = self._exception.__traceback__
 
         while tb:
             frame_info = inspect.getframeinfo(tb)
-            self._frames.append(Frame(inspect.FrameInfo(tb.tb_frame, *frame_info)))
+            frames.append(Frame(inspect.FrameInfo(tb.tb_frame, *frame_info)))
             tb = tb.tb_next
 
-        return self._frames
+        return frames
 
     @property
     def previous_exception(self) -> BaseException | None:

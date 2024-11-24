@@ -5,6 +5,7 @@ import re
 import sys
 
 from contextlib import suppress
+from functools import cached_property
 from typing import TYPE_CHECKING
 from typing import cast
 
@@ -56,7 +57,6 @@ class Application:
     def __init__(self, name: str = "console", version: str = "") -> None:
         self._name = name
         self._version = version
-        self._display_name: str | None = None
         self._terminal = Terminal().size
         self._default_command = "list"
         self._single_command = False
@@ -67,7 +67,6 @@ class Application:
         self._catch_exceptions = True
         self._auto_exit = True
         self._initialized = False
-        self._ui: UI | None = None
 
         # TODO: signals support
         self._event_dispatcher: EventDispatcher | None = None
@@ -78,12 +77,9 @@ class Application:
     def name(self) -> str:
         return self._name
 
-    @property
+    @cached_property
     def display_name(self) -> str:
-        if self._display_name is None:
-            return re.sub(r"[\s\-_]+", " ", self._name).title()
-
-        return self._display_name
+        return re.sub(r"[\s\-_]+", " ", self._name).title()
 
     @property
     def version(self) -> str:
@@ -120,12 +116,9 @@ class Application:
     def help(self) -> str:
         return self.long_version
 
-    @property
+    @cached_property
     def ui(self) -> UI:
-        if self._ui is None:
-            self._ui = self._get_default_ui()
-
-        return self._ui
+        return self._get_default_ui()
 
     @property
     def event_dispatcher(self) -> EventDispatcher | None:
