@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence, NamedTuple, Generic, TypeVar, Iterable
+from typing import Sequence, NamedTuple, Generic, TypeVar, Iterable, overload
 import inspect
 from types import SimpleNamespace
 
@@ -12,7 +12,7 @@ class BadOptionError(Exception):
     pass
 
 
-class HelpFormatter:
+class HelpComposer:
     def __init__(self) -> None:
         pass
 
@@ -116,6 +116,8 @@ class Arguments(SimpleNamespace):
 class OptionGroup(list[Option]):
     pass
 
+class Values(SimpleNamespace):
+    pass
 
 @dataclass
 class Parsed:
@@ -134,11 +136,11 @@ class Parser:
         self,
         app_name: str,
         help: str | None = None,
-        formatter: HelpFormatter | None = None,
+        formatter: HelpComposer | None = None,
     ) -> None:
         self.app_name = app_name
         self.help = help
-        self.formatter = formatter or HelpFormatter()
+        self.formatter = formatter or HelpComposer()
         self._mixed_params = True
 
     def add_option(self, option: Option) -> None:
@@ -147,14 +149,18 @@ class Parser:
     def add_argument(self, argument: Argument) -> None:
         pass
 
-    def parse_args(self, args: Sequence[str] | None = None) -> Parsed:
-        import sys
-        if args:
-            args = args[:]
+    @overload
+    def parse_args(self, args: Sequence[str] | None = None) -> Values:
+        ...
 
-        # args found
+    def parse_args(self, args: Sequence[str] | None = None, model: T | None = None) -> T:
+        if not args:
+            import sys
+            args = sys.argv[1:]
+
+        args = args[:]
         found_args = []
-        remaining_args = args or sys.argv[1:]
+        remaining_args = args
 
         while remaining_args:
             arg = remaining_args.pop(0)
