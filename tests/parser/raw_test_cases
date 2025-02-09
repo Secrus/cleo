@@ -1,0 +1,29 @@
+$ poetry env list -C${PROJ}
+.venv (Activated)
+$ poetry env list -P${PROJ}
+.venv (Activated)
+$ poetry env list -P ${PROJ}
+.venv (Activated)
+$ poetry run -P ${PROJ} echo hi
+hi
+$ poetry run -P ${PROJ} python -V
+Python 3.13.1
+$ poetry run -P ${PROJ} echo hi
+hi
+$ poetry run -P${PROJ} echo hi
+hi
+$ poetry -P${PROJ} run echo hi
+hi
+$ poetry -P${PROJ} run -v echo hi
+Trying to detect current active python executable as specified in the config.
+Found: /usr/bin/python
+Using virtualenv: /home/abn/workspace/python-poetry/poetry/.venv
+hi
+$ poetry -P${PROJ} run -v python -V
+Trying to detect current active python executable as specified in the config.
+Found: /usr/bin/python
+Using virtualenv: /home/abn/workspace/python-poetry/poetry/.venv
+Python 3.13.1
+$ poetry -P${PROJ} run -V python -V
+Poetry (version 2.0.1)
+
